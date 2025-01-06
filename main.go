@@ -2,30 +2,48 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 	"net/http"
 )
 
 // Структура для тикетов
 type Ticket struct {
-	ID      int    `json:"id"`
+	ID      uint   `json:"id" gorm:"primaryKey"`
 	Title   string `json:"title"`
 	Content string `json:"content"`
 	Status  string `json:"status"`
 }
 
-// Хранилище тикетов
-var tickets = []Ticket{
-	{ID: 1, Title: "First Ticket", Content: "This is the first ticket", Status: "open"},
+// Глобальная переменная для базы данных
+var db *gorm.DB
+
+func initDatabase() {
+	// Подключение к PostgreSQL
+	dsn := "host=localhost user=postgres password=yourpassword dbname=helpdesk port=5432 sslmode=disable"
+	var err error
+	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	if err != nil {
+		panic("Failed to connect to database")
+	}
+
+	// Миграция структуры
+	err = db.AutoMigrate(&Ticket{})
+	if err != nil {
+		panic("Failed to migrate database")
+	}
 }
 
-// Генерация следующего ID
-var nextID = 2
-
 func main() {
+	// Инициализация базы данных
+	initDatabase()
+
 	router := gin.Default()
 
 	// Маршрут: Получение всех тикетов
 	router.GET("/tickets", func(c *gin.Context) {
+		var tickets []Ticket
+		db.Find(&tickets)
 		c.JSON(http.StatusOK, tickets)
 	})
 
@@ -36,55 +54,45 @@ func main() {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		newTicket.ID = nextID
-		nextID++
-		tickets = append(tickets, newTicket)
+		db.Create(&newTicket)
 		c.JSON(http.StatusCreated, newTicket)
 	})
 
 	// Маршрут: Получение тикета по ID
 	router.GET("/tickets/:id", func(c *gin.Context) {
 		id := c.Param("id")
-		for _, ticket := range tickets {
-			if c.Param("id") == id {
-				c.JSON(http.StatusOK, ticket)
-				return
-			}
+		var ticket Ticket
+		if err := db.First(&ticket, id).Error; err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"message": "Ticket not found"})
+			return
 		}
-		c.JSON(http.StatusNotFound, gin.H{"message": "Ticket not found"})
+		c.JSON(http.StatusOK, ticket)
 	})
 
 	// Маршрут: Обновление тикета
 	router.PUT("/tickets/:id", func(c *gin.Context) {
 		id := c.Param("id")
-		var updatedTicket Ticket
-		if err := c.ShouldBindJSON(&updatedTicket); err != nil {
+		var ticket Ticket
+		if err := db.First(&ticket, id).Error; err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"message": "Ticket not found"})
+			return
+		}
+		if err := c.ShouldBindJSON(&ticket); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		for i, ticket := range tickets {
-			if id == string(ticket.ID) {
-				tickets[i].Title = updatedTicket.Title
-				tickets[i].Content = updatedTicket.Content
-				tickets[i].Status = updatedTicket.Status
-				c.JSON(http.StatusOK, tickets[i])
-				return
-			}
-		}
-		c.JSON(http.StatusNotFound, gin.H{"message": "Ticket not found"})
+		db.Save(&ticket)
+		c.JSON(http.StatusOK, ticket)
 	})
 
 	// Маршрут: Удаление тикета
 	router.DELETE("/tickets/:id", func(c *gin.Context) {
 		id := c.Param("id")
-		for i, ticket := range tickets {
-			if id == string(ticket.ID) {
-				tickets = append(tickets[:i], tickets[i+1:]...)
-				c.JSON(http.StatusOK, gin.H{"message": "Ticket deleted"})
-				return
-			}
+		if err := db.Delete(&Ticket{}, id).Error; err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"message": "Ticket not found"})
+			return
 		}
-		c.JSON(http.StatusNotFound, gin.H{"message": "Ticket not found"})
+		c.JSON(http.StatusOK, gin.H{"message": "Ticket deleted"})
 	})
 
 	router.Run(":8080")
