@@ -2,10 +2,22 @@ package main
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v4"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"net/http"
+	"time"
 )
+
+var db *gorm.DB
+var jwtKey = []byte("your_secret_key")
+
+// Пользовательская структура
+type User struct {
+	ID       uint   `json:"id" gorm:"primaryKey"`
+	Username string `json:"username" gorm:"unique"`
+	Password string `json:"password"`
+}
 
 // Структура для тикетов
 type Ticket struct {
@@ -15,85 +27,110 @@ type Ticket struct {
 	Status  string `json:"status"`
 }
 
-// Глобальная переменная для базы данных
-var db *gorm.DB
+// JWT-структура для токена
+type Claims struct {
+	Username string `json:"username"`
+	jwt.RegisteredClaims
+}
 
 func initDatabase() {
-	// Подключение к PostgreSQL
 	dsn := "host=localhost user=postgres password=yourpassword dbname=helpdesk port=5432 sslmode=disable"
 	var err error
 	db, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		panic("Failed to connect to database")
 	}
-
 	// Миграция структуры
-	err = db.AutoMigrate(&Ticket{})
+	err = db.AutoMigrate(&User{}, &Ticket{})
 	if err != nil {
 		panic("Failed to migrate database")
 	}
 }
 
-func main() {
-	// Инициализация базы данных
-	initDatabase()
+func generateToken(username string) (string, error) {
+	expirationTime := time.Now().Add(24 * time.Hour)
+	claims := &Claims{
+		Username: username,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(expirationTime),
+		},
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString(jwtKey)
+}
 
+func authenticateMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		tokenString := c.GetHeader("Authorization")
+		if tokenString == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"message": "Missing token"})
+			c.Abort()
+			return
+		}
+
+		claims := &Claims{}
+		token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+			return jwtKey, nil
+		})
+		if err != nil || !token.Valid {
+			c.JSON(http.StatusUnauthorized, gin.H{"message": "Invalid token"})
+			c.Abort()
+			return
+		}
+
+		c.Set("username", claims.Username)
+		c.Next()
+	}
+}
+
+func main() {
+	initDatabase()
 	router := gin.Default()
 
-	// Маршрут: Получение всех тикетов
-	router.GET("/tickets", func(c *gin.Context) {
-		var tickets []Ticket
-		db.Find(&tickets)
-		c.JSON(http.StatusOK, tickets)
-	})
-
-	// Маршрут: Создание нового тикета
-	router.POST("/tickets", func(c *gin.Context) {
-		var newTicket Ticket
-		if err := c.ShouldBindJSON(&newTicket); err != nil {
+	// Регистрация пользователя
+	router.POST("/register", func(c *gin.Context) {
+		var user User
+		if err := c.ShouldBindJSON(&user); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		db.Create(&newTicket)
-		c.JSON(http.StatusCreated, newTicket)
-	})
-
-	// Маршрут: Получение тикета по ID
-	router.GET("/tickets/:id", func(c *gin.Context) {
-		id := c.Param("id")
-		var ticket Ticket
-		if err := db.First(&ticket, id).Error; err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"message": "Ticket not found"})
+		if err := db.Create(&user).Error; err != nil {
+			c.JSON(http.StatusConflict, gin.H{"message": "User already exists"})
 			return
 		}
-		c.JSON(http.StatusOK, ticket)
+		c.JSON(http.StatusCreated, gin.H{"message": "User registered successfully"})
 	})
 
-	// Маршрут: Обновление тикета
-	router.PUT("/tickets/:id", func(c *gin.Context) {
-		id := c.Param("id")
-		var ticket Ticket
-		if err := db.First(&ticket, id).Error; err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"message": "Ticket not found"})
-			return
-		}
-		if err := c.ShouldBindJSON(&ticket); err != nil {
+	// Логин пользователя
+	router.POST("/login", func(c *gin.Context) {
+		var user User
+		var foundUser User
+		if err := c.ShouldBindJSON(&user); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
 		}
-		db.Save(&ticket)
-		c.JSON(http.StatusOK, ticket)
-	})
-
-	// Маршрут: Удаление тикета
-	router.DELETE("/tickets/:id", func(c *gin.Context) {
-		id := c.Param("id")
-		if err := db.Delete(&Ticket{}, id).Error; err != nil {
-			c.JSON(http.StatusNotFound, gin.H{"message": "Ticket not found"})
+		if err := db.Where("username = ?", user.Username).First(&foundUser).Error; err != nil || foundUser.Password != user.Password {
+			c.JSON(http.StatusUnauthorized, gin.H{"message": "Invalid credentials"})
 			return
 		}
-		c.JSON(http.StatusOK, gin.H{"message": "Ticket deleted"})
+		token, err := generateToken(user.Username)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "Could not generate token"})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"token": token})
 	})
+
+	// Пример защищенного маршрута
+	protected := router.Group("/tickets")
+	protected.Use(authenticateMiddleware())
+	{
+		protected.GET("/", func(c *gin.Context) {
+			var tickets []Ticket
+			db.Find(&tickets)
+			c.JSON(http.StatusOK, tickets)
+		})
+	}
 
 	router.Run(":8080")
 }
