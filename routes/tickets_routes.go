@@ -15,5 +15,6 @@ func RegisterTicketRoutes(router *gin.Engine) {
 	protected.POST("/", controllers.CreateTicket)
 	// Пользователь: просмотреть свои тикеты
 	protected.GET("/my", controllers.MyTickets)
+	protected.PATCH("/:id/status", controllers.UpdateTicketStatus) // Изменение статуса
 
 }

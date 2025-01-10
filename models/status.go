@@ -7,7 +7,7 @@ import (
 )
 
 type Status struct {
-	ID          uint             `json:"id" gorm:"primaryKey"`
+	ID          int              `json:"id" gorm:"primaryKey"`
 	Title       string           `json:"title"`
 	DateCreated time.Time        `json:"date_created" gorm:"autoCreateTime"`
 	Button      string           `json:"button"`
@@ -20,12 +20,6 @@ type Status struct {
 	Final       bool             `json:"final"`
 	Autoclose   int              `json:"autoclose"`
 	Status      string           `json:"status" gorm:"default:'Открыт'"` // Статусы: "Открыт", "В работе", "Закрыт"
-}
-
-type StatusRelation struct {
-	ID           int `gorm:"primaryKey"`
-	StatusFromID int `gorm:"not null"` // FK: ссылается на Status.ID
-	StatusToID   int `gorm:"not null"` // FK: ссылается на Status.ID
 }
 
 func (Status) Install(db *gorm.DB) {
@@ -46,4 +40,27 @@ func (Status) Install(db *gorm.DB) {
 		db.Create(&defaultStatuses)
 		fmt.Println("Данные добавлены.")
 	}
+}
+
+func (u *Status) BeforeUpdate(tx *gorm.DB) (err error) {
+	return
+}
+
+func (u *Status) BeforeSave(tx *gorm.DB) (err error) {
+	return
+}
+
+// AfterSave /**
+func (u *Status) AfterSave(tx *gorm.DB) (err error) {
+	return
+}
+
+func (u *Status) AfterUpdate(tx *gorm.DB) (err error) {
+	return
+}
+
+type StatusRelation struct {
+	ID           int `gorm:"primaryKey"`
+	StatusFromID int `gorm:"not null"` // FK: ссылается на Status.ID
+	StatusToID   int `gorm:"not null"` // FK: ссылается на Status.ID
 }
