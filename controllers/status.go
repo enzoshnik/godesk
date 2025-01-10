@@ -34,14 +34,14 @@ func UpdateTicketStatus(c *gin.Context) {
 		Status string `json:"status"`
 	}
 
-	var status models.Status
-	if err := config.DB.Where(&models.Status{Code: request.Status}).First(&status).Error; err != nil {
-		fmt.Println("Error querying users:", err)
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	var status models.Status
+	if err := config.DB.Where(&models.Status{Code: request.Status}).First(&status).Error; err != nil {
+		fmt.Println("Error querying users:", err)
 		return
 	}
 

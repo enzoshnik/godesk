@@ -43,3 +43,30 @@ func MyTickets(context *gin.Context) {
 
 	context.JSON(http.StatusOK, transformedTickets)
 }
+
+func DeleteTicket(c *gin.Context) {
+	// Получаем ID тикета из параметров запроса
+	ticketID := c.Param("id")
+	role := c.GetString("role")
+
+	// Проверка прав доступа
+	if role != "admin" {
+		c.JSON(http.StatusForbidden, gin.H{"message": "Access denied. Only administrators can delete tickets."})
+		return
+	}
+
+	// Проверяем, существует ли тикет
+	var ticket models.Ticket
+	if err := config.DB.First(&ticket, ticketID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"message": "Ticket not found"})
+		return
+	}
+
+	// Удаление тикета
+	if err := config.DB.Delete(&ticket).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to delete ticket"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Ticket deleted successfully"})
+}
