@@ -19,7 +19,10 @@ type Status struct {
 	ToStatus    []StatusRelation `json:"to_status" gorm:"foreignKey:StatusToID;references:ID"`     // Reference
 	Final       bool             `json:"final"`
 	Autoclose   int              `json:"autoclose"`
-	Status      string           `json:"status" gorm:"default:'Открыт'"` // Статусы: "Открыт", "В работе", "Закрыт"
+}
+
+func (Status) TableName() string {
+	return "status"
 }
 
 func (Status) Install(db *gorm.DB) {
@@ -33,9 +36,9 @@ func (Status) Install(db *gorm.DB) {
 		fmt.Println("Таблица Status пуста, добавляем данные...")
 		// Заполняем таблицу значениями по умолчанию
 		defaultStatuses := []Status{
-			{Title: "Открыт", Button: "Начать", Code: "open", Color: "#00FF00", Default: true, Final: false, Autoclose: 0},
-			{Title: "В работе", Button: "Закрыть", Code: "in_progress", Color: "#FFFF00", Default: false, Final: false, Autoclose: 0},
-			{Title: "Закрыт", Button: "Повторить", Code: "closed", Color: "#FF0000", Default: false, Final: true, Autoclose: 1},
+			{Title: "Открыт", Button: "Открыть", Code: "open", Color: "#00FF00", Default: true, Final: false, Autoclose: 0},
+			{Title: "В работе", Button: "В работу", Code: "in_progress", Color: "#FFFF00", Default: false, Final: false, Autoclose: 0},
+			{Title: "Закрыт", Button: "Закрыть", Code: "closed", Color: "#FF0000", Default: false, Final: true, Autoclose: 1},
 		}
 		db.Create(&defaultStatuses)
 		fmt.Println("Данные добавлены.")

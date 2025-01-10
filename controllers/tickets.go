@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"helpdesk/config"
 	"helpdesk/models"
+	"helpdesk/utils"
 	"net/http"
 )
 
@@ -27,6 +28,18 @@ func CreateTicket(context *gin.Context) {
 func MyTickets(context *gin.Context) {
 	username := context.GetString("username")
 	var tickets []models.Ticket
-	config.DB.Where("created_by = ?", username).Find(&tickets)
-	context.JSON(http.StatusOK, tickets)
+	config.DB.Preload("Status").Where("created_by = ?", username).Find(&tickets)
+
+	// Преобразование списка с помощью универсальной функции
+	transformedTickets := utils.TransformList(tickets, func(ticket models.Ticket) models.TicketFotList {
+		return models.TicketFotList{
+			ID:        ticket.ID,
+			Title:     ticket.Title,
+			Content:   ticket.Content,
+			Status:    ticket.Status,
+			CreatedBy: ticket.CreatedBy,
+		}
+	})
+
+	context.JSON(http.StatusOK, transformedTickets)
 }
