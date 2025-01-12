@@ -57,6 +57,8 @@ func Tickets(c *gin.Context) {
 		query = query.Where("created_at <= ?", end)
 	}
 
+	// todo Добавить фильтр по ответственному
+
 	// Пагинация
 	offset := (page - 1) * limit
 	query = query.Limit(limit).Offset(offset)
