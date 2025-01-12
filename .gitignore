@@ -1,2 +1,45 @@
-/.env
-/.idea
+# Бинарные файлы
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Каталоги сборки и кэша
+/build/
+bin/
+tmp/
+*.out
+
+# Кэш модуля Go
+/pkg/
+*.a
+
+# Файлы и каталоги Go
+go.sum
+go.work
+go.work.sum
+
+# Конфигурационные файлы IDE/редактора
+.vscode/
+.idea/
+*.iml
+
+# Лог-файлы и отладочная информация
+*.log
+*.trace
+
+# Файлы системы macOS
+.DS_Store
+._*
+
+# Файлы системы Windows
+Thumbs.db
+desktop.ini
+
+# Кэш Python (если проект смешанный)
+__pycache__/
+*.pyc
+
+# Файлы окружения
+.env
+.env.*
