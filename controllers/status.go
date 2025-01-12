@@ -24,7 +24,14 @@ func UpdateTicketStatus(c *gin.Context) {
 	}
 
 	// Проверка прав доступа
-	if role != "admin" && ticket.CreatedBy != username {
+
+	//Получим ID пользователя
+	var user = models.User{}
+	if err := config.DB.Where("username = ?", username).First(&user).Error; err != nil {
+
+	}
+
+	if role != "admin" && ticket.CreatedBy != user.ID {
 		c.JSON(http.StatusForbidden, gin.H{"message": "Access denied"})
 		return
 	}
