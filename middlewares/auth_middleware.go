@@ -24,6 +24,7 @@ func AuthenticateMiddleware() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
+		c.Set("userId", claims.ID)
 		c.Set("username", claims.Username)
 		c.Set("role", claims.Role)
 		c.Next()

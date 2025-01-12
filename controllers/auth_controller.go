@@ -17,6 +17,13 @@ func Register(c *gin.Context) {
 	if user.Role == "" {
 		user.Role = "user"
 	}
+
+	// Хэширование пароля
+	if err := user.SetPassword(user.Password); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to hash password"})
+		return
+	}
+
 	if err := config.DB.Create(&user).Error; err != nil {
 		c.JSON(http.StatusConflict, gin.H{"message": "User already exists"})
 		return
@@ -25,20 +32,35 @@ func Register(c *gin.Context) {
 }
 
 func Login(c *gin.Context) {
-	var user models.User
-	var foundUser models.User
-	if err := c.ShouldBindJSON(&user); err != nil {
+
+	var loginRequest struct {
+		Username string `json:"username"`
+		Password string `json:"password"`
+	}
+
+	if err := c.ShouldBindJSON(&loginRequest); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	if err := config.DB.Where("username = ?", user.Username).First(&foundUser).Error; err != nil || foundUser.Password != user.Password {
-		c.JSON(http.StatusUnauthorized, gin.H{"message": "Invalid credentials"})
+
+	var user models.User
+	if err := config.DB.Where("username = ?", loginRequest.Username).First(&user).Error; err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "Invalid username or password"})
 		return
 	}
-	token, err := utils.GenerateToken(foundUser.Username, foundUser.Role)
+
+	// Проверка пароля
+	if !user.CheckPassword(loginRequest.Password) {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "Invalid username or password"})
+		return
+	}
+
+	// Генерация токена (пример)
+	token, err := utils.GenerateToken(user.Username, user.Role)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Could not generate token"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"token": token})
+
+	c.JSON(http.StatusOK, gin.H{"message": "Login successful", "token": token})
 }
