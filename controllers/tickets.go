@@ -12,6 +12,21 @@ import (
 	"time"
 )
 
+// GetAllTickets godoc
+// @Summary Get all tickets
+// @Description Retrieve a list of tickets with optional filters and pagination
+// @Tags Tickets
+// @Accept json
+// @Produce json
+// @Param page query int false "Page number"
+// @Param limit query int false "Limit of tickets per page"
+// @Param status query string false "Filter by ticket status"
+// @Param created_by query string false "Filter by creator username"
+// @Param start_date query string false "Filter by start date (YYYY-MM-DD)"
+// @Param end_date query string false "Filter by end date (YYYY-MM-DD)"
+// @Success 200 {object} map[string]interface{}
+// @Failure 500 {object} map[string]string
+// @Router /tickets [get]
 func Tickets(c *gin.Context) {
 	// Параметры пагинации
 	page, limit := utils.ParsePagination(c)

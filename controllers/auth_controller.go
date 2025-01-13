@@ -8,6 +8,17 @@ import (
 	"net/http"
 )
 
+// RegisterUser godoc
+// @Summary Register a new user
+// @Description Create a new user with a username and password
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Param user body models.User true "User data"
+// @Success 201 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /register [post]
 func Register(c *gin.Context) {
 	var user models.User
 	if err := c.ShouldBindJSON(&user); err != nil {
