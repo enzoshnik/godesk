@@ -6,7 +6,7 @@ type Ticket struct {
 	ID                   uint      `json:"id" gorm:"primaryKey"`
 	Title                string    `gorm:"size:255;not null"`
 	Content              string    `json:"content"`
-	StatusId             int       `json:"status_id" gorm:"default:1"`                 // Статусы: "Открыт", "В работе", "Закрыт"
+	StatusId             int       `json:"status_id" gorm:"default:1"`
 	Status               Status    `json:"-" gorm:"foreignKey:StatusId;references:ID"` // Reference
 	Uuid                 string    `gorm:"size:255;not null"`
 	DateCreated          time.Time `gorm:"not null"`
@@ -30,4 +30,5 @@ type Ticket struct {
 	DurationPlan         uint      `gorm:"not null"`
 	SectionId            uint      `gorm:"not null"`
 	ExtFields            string    `gorm:"type:text"`
+	Comments             []Comment `json:"-" gorm:"foreignKey:TicketID;references:ID"` // Связь с комментариями
 }

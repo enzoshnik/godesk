@@ -22,6 +22,7 @@ func InitDatabase() {
 		&models.Ticket{},
 		&models.StatusRelation{},
 		&models.Status{},
+		&models.Comment{},
 	)
 	if err != nil {
 		panic("Failed to migrate database")

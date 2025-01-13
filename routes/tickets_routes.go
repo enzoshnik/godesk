@@ -18,4 +18,8 @@ func RegisterTicketRoutes(router *gin.Engine) {
 	protected.PATCH("/:id/status", controllers.UpdateTicketStatus) // Изменение статуса
 	protected.DELETE("/:id", controllers.DeleteTicket)             // Администратор: удалить тикет
 
+	// comment
+	protected.POST("/comments", controllers.AddComment)               // Добавление комментария
+	protected.GET("/:id/comments", controllers.GetCommentsByTicketID) // Получение комментариев
+
 }
