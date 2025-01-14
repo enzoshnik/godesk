@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"helpdesk/config"
 	"helpdesk/models"
+	"log"
 	"net/http"
 	"strconv"
 )
@@ -27,9 +28,16 @@ func AddComment(c *gin.Context) {
 	}
 
 	// Сохранение комментария
-	if err := config.DB.Create(&comment).Error; err != nil {
+	tx := config.DB.Begin() // Начинаем транзакцию
+
+	if err := tx.Create(&comment).Error; err != nil {
+		tx.Rollback() // Откатываем изменения в случае ошибки
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to add comment"})
 		return
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		log.Fatalf("Ошибка при фиксации транзакции: %v", err)
 	}
 
 	c.JSON(http.StatusCreated, gin.H{"message": "Comment added successfully", "comment": comment})
