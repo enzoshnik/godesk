@@ -1,6 +1,9 @@
 package models
 
-import "time"
+import (
+	"gorm.io/gorm"
+	"time"
+)
 
 type Ticket struct {
 	ID                   uint      `json:"id" gorm:"primaryKey"`
@@ -9,11 +12,11 @@ type Ticket struct {
 	StatusId             int       `json:"status_id" gorm:"default:1"`
 	Status               Status    `json:"-" gorm:"foreignKey:StatusId;references:ID"` // Reference
 	Uuid                 string    `gorm:"size:255;not null"`
-	DateCreated          time.Time `gorm:"not null"`
+	DateCreated          time.Time `gorm:"not null;autoCreateTime"`
 	CreatedBy            uint      `gorm:"not null"`
-	DateChanged          time.Time `gorm:"not null;autoCreateTime"`
+	DateChanged          time.Time `gorm:"not null"`
 	ChangedBy            uint      `gorm:"not null"`
-	StatusChangedDate    time.Time `gorm:"not null;autoCreateTime"`
+	StatusChangedDate    time.Time `gorm:"not null"`
 	Description          string    `gorm:"type:text"`
 	PriorityId           uint      `gorm:"not null"`
 	TypeId               uint      `gorm:"not null"`
@@ -31,4 +34,10 @@ type Ticket struct {
 	SectionId            uint      `gorm:"not null"`
 	ExtFields            string    `gorm:"type:text"`
 	Comments             []Comment `json:"-" gorm:"foreignKey:TicketID;references:ID"` // Связь с комментариями
+}
+
+func (T *Ticket) BeforeSave(tx *gorm.DB) (err error) {
+	now := time.Now()
+	T.Deadline = now.Add(3 * 24 * time.Hour)
+	return
 }
