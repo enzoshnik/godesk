@@ -88,14 +88,14 @@ func Tickets(c *gin.Context) {
 	var total int64
 	query.Count(&total)
 
+	result, err := utils.Paginate(config.DB, c, &tickets)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to retrieve tickets", "error": err.Error()})
+		return
+	}
+
 	// Формируем ответ
-	c.JSON(http.StatusOK, gin.H{
-		"page":       page,
-		"limit":      limit,
-		"total":      total,
-		"totalPages": (total + int64(limit) - 1) / int64(limit),
-		"tickets":    tickets,
-	})
+	c.JSON(http.StatusOK, result)
 
 }
 
