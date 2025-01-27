@@ -1,4 +1,4 @@
-package routes
+package swagger
 
 import (
 	"github.com/gin-gonic/gin"

@@ -3,8 +3,8 @@ package controllers
 import (
 	"github.com/gin-gonic/gin"
 	"helpdesk/config"
-	"helpdesk/models"
-	"helpdesk/utils"
+	"helpdesk/internal/models"
+	"helpdesk/pkg/utils"
 	"net/http"
 )
 
@@ -18,7 +18,7 @@ import (
 // @Success 201 {object} map[string]string
 // @Failure 400 {object} map[string]string
 // @Failure 500 {object} map[string]string
-// @Router /register [post]
+// @Router /api/v1/register [post]
 func Register(c *gin.Context) {
 	var user models.User
 	if err := c.ShouldBindJSON(&user); err != nil {
@@ -42,6 +42,16 @@ func Register(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"message": "User registered successfully"})
 }
 
+// LoginUser godoc
+// @Summary Login user
+// @Description Login user with a username and password
+// @Tags Users
+// @Accept json
+// @Produce json
+// @Success 201 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /api/v1/login [post]
 func Login(c *gin.Context) {
 
 	var loginRequest struct {

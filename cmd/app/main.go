@@ -1,17 +1,25 @@
 package main
 
 import (
-	"github.com/gin-gonic/gin"
+	"fmt"
+	"helpdesk/api"
+	"helpdesk/api/docs"
 	"helpdesk/config"
-	"helpdesk/docs"
-	"helpdesk/routes"
-	"helpdesk/utils"
+	"helpdesk/pkg/utils"
+	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name Authorization
 func main() {
+	t := time.Now()
 	// Инициализация базы данных
 	utils.LoadEnv()
-	config.InitDatabase()
+	conf := config.LoadConfig()
+	conf.InitDatabase()
 
 	// Создаем сервер
 	router := gin.Default()
@@ -24,10 +32,13 @@ func main() {
 	docs.SwaggerInfo.BasePath = "/"
 
 	// Подключаем маршруты
-	routes.RegisterAuthRoutes(router)
-	routes.RegisterTicketRoutes(router)
-	routes.RegisterSwaggerRoutes(router)
+	api.RegisterRoutes(router)
+
+	fmt.Println(time.Since(t))
 
 	// Запускаем сервер
-	router.Run(":8080")
+	err := router.Run(":8080")
+	if err != nil {
+		return
+	}
 }

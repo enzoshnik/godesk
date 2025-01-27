@@ -3,7 +3,7 @@ package controllers
 import (
 	"github.com/gin-gonic/gin"
 	"helpdesk/config"
-	"helpdesk/models"
+	"helpdesk/internal/models"
 	"log"
 	"net/http"
 	"strconv"

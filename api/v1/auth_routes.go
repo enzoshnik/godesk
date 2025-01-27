@@ -1,11 +1,11 @@
-package routes
+package v1
 
 import (
 	"github.com/gin-gonic/gin"
-	"helpdesk/controllers"
+	"helpdesk/internal/controllers"
 )
 
-func RegisterAuthRoutes(router *gin.Engine) {
+func RegisterAuthRoutes(router *gin.RouterGroup) {
 	router.POST("/register", controllers.Register)
 	router.POST("/login", controllers.Login)
 }

@@ -5,8 +5,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"helpdesk/config"
-	"helpdesk/models"
-	"helpdesk/utils"
+	"helpdesk/internal/models"
+	utils2 "helpdesk/pkg/utils"
 	"net/http"
 	"strconv"
 	"time"
@@ -18,6 +18,7 @@ import (
 // @Tags Tickets
 // @Accept json
 // @Produce json
+// @Security ApiKeyAuth
 // @Param page query int false "Page number"
 // @Param limit query int false "Limit of tickets per page"
 // @Param status query string false "Filter by ticket status"
@@ -26,10 +27,10 @@ import (
 // @Param end_date query string false "Filter by end date (YYYY-MM-DD)"
 // @Success 200 {object} map[string]interface{}
 // @Failure 500 {object} map[string]string
-// @Router /tickets [get]
+// @Router /api/v1/tickets/ [get]
 func Tickets(c *gin.Context) {
 	// Параметры пагинации
-	page, limit := utils.ParsePagination(c)
+	page, limit := utils2.ParsePagination(c)
 	var status models.Status
 
 	// Параметры фильтрации
@@ -88,7 +89,7 @@ func Tickets(c *gin.Context) {
 	var total int64
 	query.Count(&total)
 
-	result, err := utils.Paginate(config.DB, c, &tickets)
+	result, err := utils2.Paginate(config.DB, c, &tickets)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to retrieve tickets", "error": err.Error()})
 		return
@@ -135,7 +136,7 @@ func MyTickets(context *gin.Context) {
 	config.DB.Preload("Status").Where("created_by = ?", userId).Limit(limit).Offset(offset).Find(&tickets)
 
 	// Преобразование списка с помощью универсальной функции
-	transformedTickets := utils.TransformList(tickets, func(ticket models.Ticket) models.TicketFotList {
+	transformedTickets := utils2.TransformList(tickets, func(ticket models.Ticket) models.TicketFotList {
 		return models.TicketFotList{
 			ID:        ticket.ID,
 			Title:     ticket.Title,
