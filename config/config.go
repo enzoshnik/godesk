@@ -47,12 +47,11 @@ func LoadConfig() *Config {
 	}
 }
 
-func (config *Config) InitDatabase() *gorm.DB {
+func (config *Config) InitDatabase() {
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable", config.Db.Host, config.Db.User, config.Db.Password, config.Db.Name, config.Db.Port)
 	var err error
 	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		panic("Failed to connect to database")
 	}
-	return DB
 }

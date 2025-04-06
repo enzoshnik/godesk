@@ -1,9 +1,10 @@
 package api
 
 import (
-	"github.com/gin-gonic/gin"
 	"helpdesk/api/swagger"
-	"helpdesk/api/v1"
+	v1 "helpdesk/api/v1"
+
+	"github.com/gin-gonic/gin"
 )
 
 func RegisterRoutes(router *gin.Engine) {
@@ -15,4 +16,5 @@ func RegisterRoutes(router *gin.Engine) {
 	apiPath := api.Group("/v1")
 	v1.RegisterAuthRoutes(apiPath)
 	v1.RegisterTicketRoutes(apiPath)
+	v1.RegisterFileRoutes(apiPath)
 }

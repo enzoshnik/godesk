@@ -12,15 +12,16 @@ import (
 func main() {
 	// Загружаем конфигурацию (например, из .env)
 	cfg := config.LoadConfig()
-	db := cfg.InitDatabase()
+	cfg.InitDatabase()
 
 	// Миграция структуры
-	err := db.AutoMigrate(
+	err := config.DB.AutoMigrate(
 		&models.User{},
 		&models.Ticket{},
 		&models.StatusRelation{},
 		&models.Status{},
 		&models.Comment{},
+		&models.File{},
 	)
 	if err != nil {
 		panic("Failed to migrate database")
