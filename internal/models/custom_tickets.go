@@ -2,7 +2,7 @@ package models
 
 import "encoding/json"
 
-type TicketFotList struct {
+type TicketForList struct {
 	ID        uint   `json:"id"`
 	Title     string `json:"title"`
 	Content   string `json:"content"`
@@ -12,7 +12,7 @@ type TicketFotList struct {
 }
 
 // Кастомный метод MarshalJSON для управления выводом Status в списке Tickets
-func (ct TicketFotList) MarshalJSON() ([]byte, error) {
+func (ct TicketForList) MarshalJSON() ([]byte, error) {
 	return json.Marshal(struct {
 		ID         uint   `json:"id"`
 		Title      string `json:"title"`

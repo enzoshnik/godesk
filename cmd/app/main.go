@@ -5,7 +5,8 @@ import (
 	"helpdesk/api"
 	"helpdesk/api/docs"
 	"helpdesk/config"
-	"helpdesk/pkg/utils"
+
+	// "helpdesk/pkg/utils"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -17,7 +18,7 @@ import (
 func main() {
 	t := time.Now()
 	// Инициализация базы данных
-	utils.LoadEnv()
+	// utils.LoadEnv()
 	conf := config.LoadConfig()
 	conf.InitDatabase()
 

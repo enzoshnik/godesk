@@ -2,14 +2,15 @@ package controllers
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"helpdesk/config"
 	"helpdesk/internal/models"
 	utils2 "helpdesk/pkg/utils"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 // GetAllTickets godoc
@@ -136,8 +137,8 @@ func MyTickets(context *gin.Context) {
 	config.DB.Preload("Status").Where("created_by = ?", userId).Limit(limit).Offset(offset).Find(&tickets)
 
 	// Преобразование списка с помощью универсальной функции
-	transformedTickets := utils2.TransformList(tickets, func(ticket models.Ticket) models.TicketFotList {
-		return models.TicketFotList{
+	transformedTickets := utils2.TransformList(tickets, func(ticket models.Ticket) models.TicketForList {
+		return models.TicketForList{
 			ID:        ticket.ID,
 			Title:     ticket.Title,
 			Content:   ticket.Content,

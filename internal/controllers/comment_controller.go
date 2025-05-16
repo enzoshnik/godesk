@@ -1,12 +1,12 @@
 package controllers
 
 import (
-	"github.com/gin-gonic/gin"
 	"helpdesk/config"
 	"helpdesk/internal/models"
-	"log"
 	"net/http"
 	"strconv"
+
+	"github.com/gin-gonic/gin"
 )
 
 func AddComment(c *gin.Context) {
@@ -37,7 +37,8 @@ func AddComment(c *gin.Context) {
 	}
 
 	if err := tx.Commit().Error; err != nil {
-		log.Fatalf("Ошибка при фиксации транзакции: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to commit transaction"})
+		return
 	}
 
 	c.JSON(http.StatusCreated, gin.H{"message": "Comment added successfully", "comment": comment})

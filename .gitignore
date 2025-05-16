@@ -43,3 +43,6 @@ __pycache__/
 # Файлы окружения
 .env
 .env.*
+
+# Cursor
+.cursorrules
